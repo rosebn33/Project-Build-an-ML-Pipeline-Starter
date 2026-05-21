@@ -1,10 +1,12 @@
 import json
 
+import json
 import mlflow
 import tempfile
 import os
 import wandb
 import hydra
+import omegaconf
 from omegaconf import DictConfig
 
 _steps = [
@@ -58,11 +60,12 @@ def go(config: DictConfig):
                     "main",
                     version="main",
                     parameters={
-                        "csv": "clean_sample.csv:latest",
-                        "ref": "clean_sample.csv:reference",
-                        "kl_threshold": config["data_check"]["kl_threshold"],
-                        "min_price": config["etl"]["min_price"],
-                        "max_price": config["etl"]["max_price"],
+                        "trainval_artifact": "trainval_data.csv:latest",
+                        "rf_config": os.path.abspath("rf_config.json"),
+                        "output_artifact": "random_forest_export",
+                        "val_size": config["modeling"]["val_size"],
+                        "random_seed": config["modeling"]["random_seed"],
+                        "max_tfidf_features": config["modeling"]["max_tfidf_features"],
                     },
                 )
 
@@ -76,14 +79,39 @@ def go(config: DictConfig):
             ##################
             # Implement here #
             ##################
-            pass
+            _ = mlflow.run(
+                f"{config['main']['components_repository']}/train_val_test_split",
+                "main",
+                parameters={
+                    "input": "clean_sample.csv:latest",
+                    "test_size": config["modeling"]["test_size"],
+                    "random_seed": config["modeling"]["random_seed"],
+                    "stratify_by": config["modeling"]["stratify_by"],
+                },
+            )
 
         if "train_random_forest" in active_steps:
+            # Serialize the RF config properly
+            rf_config = omegaconf.OmegaConf.to_container(
+                config["modeling"]["random_forest"]
+            )
+            with open("rf_config.json", "w") as fp:
+                json.dump(rf_config, fp)
 
-            # NOTE: we need to serialize the random forest configuration into JSON
-            rf_config = os.path.abspath("rf_config.json")
-            with open(rf_config, "w+") as fp:
-                json.dump(dict(config["modeling"]["random_forest"].items()), fp)  # DO NOT TOUCH
+            _ = mlflow.run(
+                uri="src/train_random_forest",
+                entry_point="main",
+                parameters={
+                    "trainval_artifact": "trainval_data.csv:latest",
+                    "val_size": 0.2,
+                    "random_seed": 42,
+                    "stratify_by": "none",
+                    "rf_config": os.path.abspath("rf_config.json"),
+                    "max_tfidf_features": 5,
+                    "output_artifact": "random_forest_export"
+                },
+            )
+            # DO NOT TOUCH
 
             # NOTE: use the rf_config we just created as the rf_config parameter for the train_random_forest
             # step
@@ -92,7 +120,6 @@ def go(config: DictConfig):
             # Implement here #
             ##################
 
-            pass
 
         if "test_regression_model" in active_steps:
 

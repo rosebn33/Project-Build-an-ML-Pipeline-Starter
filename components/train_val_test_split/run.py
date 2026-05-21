@@ -9,7 +9,8 @@ import wandb
 import tempfile
 from sklearn.model_selection import train_test_split
 from wandb_utils.log_artifact import log_artifact
-
+import os
+import tempfile
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
@@ -22,7 +23,12 @@ def go(args):
     # Download input artifact. This will also note that this script is using this
     # particular version of the artifact
     logger.info(f"Fetching artifact {args.input}")
-    artifact_local_path = run.use_artifact(args.input).file()
+    artifact = run.use_artifact(args.input)
+    artifact_dir = artifact.download(root="artifacts")
+    artifact_local_path = os.path.join(
+        artifact_dir,
+        list(artifact.manifest.entries.keys())[0]
+    )
 
     df = pd.read_csv(artifact_local_path)
 
@@ -37,8 +43,7 @@ def go(args):
     # Save to output files
     for df, k in zip([trainval, test], ['trainval', 'test']):
         logger.info(f"Uploading {k}_data.csv dataset")
-        with tempfile.NamedTemporaryFile("w") as fp:
-
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as fp:
             df.to_csv(fp.name, index=False)
 
             log_artifact(

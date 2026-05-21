@@ -7,7 +7,7 @@ import logging
 import wandb
 import pandas as pd
 
-
+import os
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
@@ -20,7 +20,9 @@ def go(args):
     # Download input artifact. This will also log that this script is using this
     
     run = wandb.init(project="nyc_airbnb", group="cleaning", save_code=True)
-    artifact_local_path = run.use_artifact(args.input_artifact).file()
+    artifact = run.use_artifact(args.input)
+    artifact_dir = artifact.download()
+    artifact_local_path = os.path.join(artifact_dir, list(artifact.manifest.entries.keys())[0])
     df = pd.read_csv(artifact_local_path)
     # Drop outliers
     min_price = args.min_price
