@@ -116,7 +116,7 @@ def go(config: DictConfig):
                     "trainval_artifact": "trainval_data.csv:latest",
                     "val_size": 0.2,
                     "random_seed": 42,
-                    "stratify_by": "none",
+                    "stratify_by": "neighbourhood_group",
                     "rf_config": os.path.abspath("rf_config.json"),
                     "max_tfidf_features": 5,
                     "output_artifact": "random_forest_export"
