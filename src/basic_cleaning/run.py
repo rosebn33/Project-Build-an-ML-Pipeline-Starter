@@ -7,7 +7,7 @@ import logging
 import wandb
 import pandas as pd
 
-import os
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
@@ -20,9 +20,7 @@ def go(args):
     # Download input artifact. This will also log that this script is using this
     
     run = wandb.init(project="nyc_airbnb", group="cleaning", save_code=True)
-    artifact = run.use_artifact(args.input)
-    artifact_dir = artifact.download()
-    artifact_local_path = os.path.join(artifact_dir, list(artifact.manifest.entries.keys())[0])
+    artifact_local_path = run.use_artifact(args.input_artifact).file()
     df = pd.read_csv(artifact_local_path)
     # Drop outliers
     min_price = args.min_price
@@ -51,6 +49,7 @@ def go(args):
     run.log_artifact(artifact)
 
 
+
 # TODO: In the code below, fill in the data type for each argument. The data type should be str, float or int. 
 # TODO: In the code below, fill in a description for each argument. The description should be a string.
 if __name__ == "__main__":
@@ -59,43 +58,43 @@ if __name__ == "__main__":
   
     parser.add_argument(
         "--input_artifact", 
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = str,## INSERT TYPE HERE: str, float or int,
+        help = "spasiba", ## INSERT DESCRIPTION HERE,
         required = True
     )
 
     parser.add_argument(
         "--output_artifact", 
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = str, ## INSERT TYPE HERE: str, float or int,
+        help = "s", ## INSERT DESCRIPTION HERE,
         required = True
     )
 
     parser.add_argument(
         "--output_type", 
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = str,## INSERT TYPE HERE: str, float or int,
+        help = "s", ## INSERT DESCRIPTION HERE,
         required = True
     )
 
     parser.add_argument(
         "--output_description", 
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = str, ## INSERT TYPE HERE: str, float or int,
+        help = "s", ## INSERT DESCRIPTION HERE,
         required = True
     )
 
     parser.add_argument(
         "--min_price", 
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = float,## INSERT TYPE HERE: str, float or int,
+        help = "f", ## INSERT DESCRIPTION HERE,
         required = True
     )
 
     parser.add_argument(
         "--max_price",
-        type = ## INSERT TYPE HERE: str, float or int,
-        help = ## INSERT DESCRIPTION HERE,
+        type = float, ## INSERT TYPE HERE: str, float or int,
+        help = "s", ## INSERT DESCRIPTION HERE,
         required = True
     )
 

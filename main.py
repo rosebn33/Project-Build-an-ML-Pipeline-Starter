@@ -55,25 +55,36 @@ def go(config: DictConfig):
             ##################
             # Implement here #
             ##################
-                _ = mlflow.run(
-                    f"{config['main']['components_repository']}/data_check",
-                    "main",
-                    version="main",
-                    parameters={
-                        "trainval_artifact": "trainval_data.csv:latest",
-                        "rf_config": os.path.abspath("rf_config.json"),
-                        "output_artifact": "random_forest_export",
-                        "val_size": config["modeling"]["val_size"],
-                        "random_seed": config["modeling"]["random_seed"],
-                        "max_tfidf_features": config["modeling"]["max_tfidf_features"],
-                    },
-                )
+            _ = mlflow.run(
+                os.path.join(hydra.utils.get_original_cwd(),"src","basic_cleaning"),
+                entry_point="main",
+                parameters={
+                    "input_artifact": "sample.csv:latest",
+                    "output_artifact": "clean_sample.csv",
+                    "output_type": "clean_sample",
+                    "output_description": "clean_data",
+                    "min_price": config["etl"]["min_price"],
+                    "max_price": config["etl"]["max_price"]
+
+
+                },
+            )
 
         if "data_check" in active_steps:
             ##################
             # Implement here #
             ##################
-            pass
+             _ = mlflow.run(
+                    os.path.join(hydra.utils.get_original_cwd(),"src","data_check"),  
+                    ##version="main",
+                    parameters={
+                        "csv": "clean_sample.csv:latest",
+                        "ref": "clean_sample.csv:reference",
+                        "kl_threshold": config["data_check"]["kl_threshold"],
+                        "min_price": config["etl"]["min_price"],
+                        "max_price": config["etl"]["max_price"]
+                    },
+                )
 
         if "data_split" in active_steps:
             ##################
