@@ -103,27 +103,26 @@ def go(config: DictConfig):
 
         if "train_random_forest" in active_steps:
             # Serialize the RF config properly
-            rf_config = omegaconf.OmegaConf.to_container(
-                config["modeling"]["random_forest"]
-            )
-            with open("rf_config.json", "w") as fp:
-                json.dump(rf_config, fp)
+            rf_config = os.path.abspath("rf_config.json")
+            with open(rf_config, "w") as fp:
+                json.dump(dict(config["modeling"]["random_forest"].items()), fp)
 
             _ = mlflow.run(
-                uri="src/train_random_forest",
-                entry_point="main",
+                os.path.join(hydra.utils.get_original_cwd(),"src","train_random_forest"),
+                ## entry_point="main",
                 parameters={
                     "trainval_artifact": "trainval_data.csv:latest",
                     "val_size": 0.2,
                     "random_seed": 42,
                     "stratify_by": "neighbourhood_group",
-                    "rf_config": os.path.abspath("rf_config.json"),
+                    "rf_config": rf_config,
                     "max_tfidf_features": 5,
                     "output_artifact": "random_forest_export"
                 },
             )
             # DO NOT TOUCH
-
+ 
+        
             # NOTE: use the rf_config we just created as the rf_config parameter for the train_random_forest
             # step
 
