@@ -112,11 +112,11 @@ def go(config: DictConfig):
                 ## entry_point="main",
                 parameters={
                     "trainval_artifact": "trainval_data.csv:latest",
-                    "val_size": 0.2,
-                    "random_seed": 42,
+                    "val_size":  config["modeling"]["val_size"],
+                    "random_seed": config["modeling"]["random_seed"],
                     "stratify_by": "neighbourhood_group",
                     "rf_config": rf_config,
-                    "max_tfidf_features": 5,
+                    "max_tfidf_features": config["modeling"]["max_tfdidf_features"],
                     "output_artifact": "random_forest_export"
                 },
             )
@@ -137,7 +137,16 @@ def go(config: DictConfig):
             # Implement here #
             ##################
 
-            pass
+              _ = mlflow.run(
+                f"{config['main']['components_repository']}/test_regression_model",
+                "main",
+                parameters={
+                    "mlflow_model": "random_forest_export:prod",
+                    "test_dataset": "test_data.csv:latest"
+
+                    
+                },
+            )
 
 
 if __name__ == "__main__":
